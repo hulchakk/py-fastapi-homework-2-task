@@ -1,7 +1,7 @@
 import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ActorBaseSchema(BaseModel):
@@ -63,7 +63,6 @@ class MovieBaseSchema(BaseModel):
     revenue: float
     country: CountrySchema
     genres: List[GenreSchema]
-    languages: List[LanguageSchema]
     actors: List[ActorSchema]
     languages: List[LanguageSchema]
 
@@ -101,7 +100,6 @@ class MovieCreateSchema(BaseModel):
     date: datetime.date
     score: float = Field(ge=0, le=100)
     overview: str
-    overview: str
     status: str
     budget: float = Field(ge=0)
     revenue: float = Field(ge=0)
@@ -110,12 +108,20 @@ class MovieCreateSchema(BaseModel):
     actors: List[str]
     languages: List[str]
 
+    @field_validator("date")
+    @classmethod
+    def validate_future_date(cls, v: datetime.date) -> datetime.date:
+        today = datetime.date.today()
+        one_year_later = today.replace(year=today.year + 1)
+        if v > one_year_later:
+            raise ValueError("Movie date must not be more than one year in the future.")
+        return v
+
 
 class MovieUpdateSchema(BaseModel):
     name: Optional[str] = None
     date: Optional[datetime.date] = None
     score: Optional[float] = Field(ge=0, le=100, default=None)
-    overview: Optional[str] = None
     overview: Optional[str] = None
     status: Optional[str] = None
     budget: Optional[float] = Field(ge=0, default=None)
@@ -124,3 +130,12 @@ class MovieUpdateSchema(BaseModel):
     genres: Optional[List[str]] = None
     actors: Optional[List[str]] = None
     languages: Optional[List[str]] = None
+
+    @field_validator("date")
+    @classmethod
+    def validate_future_date(cls, v: datetime.date) -> datetime.date:
+        today = datetime.date.today()
+        one_year_later = today.replace(year=today.year + 1)
+        if v > one_year_later:
+            raise ValueError("Movie date must not be more than one year in the future.")
+        return v
